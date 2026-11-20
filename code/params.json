@@ -1,0 +1,17 @@
+{"max_runtime" : 3600,
+"LOAD_EDGES" : false, 
+"D2T" : 1, 
+"D2C" : 1, 
+"WRITE_EDGES" : false, 
+"WRITE_LP" : false,
+"FIX_SOLUTION" : false,
+"INIT_SOL" : false, 
+"LOWER_BOUND" : false,
+"VALID_INEQUALITIES" : false,
+"POLICY" : "P0",
+"MODEL_TYPE" : "BESTPOLICY",
+"XFIX" : {},
+"PROVA_PARAM" : true,
+"OVERWRITE_LOG": false,
+"COMMENTS:" : "MODEL_TYPE: STOCHASTIC, POLICY, BESTPOLICY"
+}
