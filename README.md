@@ -62,7 +62,7 @@ Every instance is an Excel workbook with the following sheets.
 
 | sheet | columns | content |
 |---|---|---|
-| `params` | `param`, `value` | `name`; `n`; `LT` = \|T\| = 3 time slots; `m`; `LS` = \|S\| = 5 scenarios (1 in `_mean` files); `C`; `p` = 10 (unit penalty for uncollected waste); `Tmax`; `Qmax` = 10000 and `M` = 10000 (big constants of the model, see §6); `service_time` = 0; `D` = 20 (baseline demand); `Depot`; `seed` |
+| `params` | `param`, `value` | `name`; `n`; `LT` = \|T\| = 3 time slots; `m`; `LS` = \|S\| = 5 scenarios (1 in `_mean` files); `C`; `p` = 10 (unit penalty for uncollected waste); `Tmax`; `Qmax` = 10000 and `M` = 10000 (big constants of the model, see §6); `service_time` = 0; `D` = 20 (baseline value for demand generation); `Depot`; `seed` |
 | `nodes` | `i`, `x`, `y`, `service_time` | node 0 is the depot, nodes 1..n the collection points; coordinates in the square [0,10]×[0,10] |
 | `edges` | `i`, `j`, `c`, `t` | **placeholder, not used**: travel costs and times are the Euclidean distances between nodes, computed when the instance is loaded |
 | `time_windows` | `t`, `e`, `l` | start *e*ₜ and end ℓₜ of each time slot (three equal slots of length Tmax/3) |
