@@ -11,8 +11,7 @@ The repository contains:
 * the **720 synthetic instances** of the Waste Collection Routing Problem with Time-Varying Stochastic Demand (WCRP-TVSD) used in Section 5, each with its **expected-value counterpart**;
 * the **instance generator**, which regenerates all 720 instances exactly from the random seeds;
 * the **per-instance solutions** of the scenario-based model (SM), the expected-value model (EM), the EM routes evaluated on the scenarios (EEV), and the 12 deterministic policies;
-* **summary tables** (CSV) from which Tables 5–7 of the paper can be recomputed, together with the ML dataset;
-* the **optimisation code** (Python + Gurobi) used to produce the results.
+* **summary tables** (CSV) from which Tables 5–7 of the paper can be recomputed, together with the ML dataset.
 
 Contact: Giuseppe Stecca (IASI-CNR), giuseppe.stecca@iasi.cnr.it
 
@@ -34,14 +33,9 @@ wm-collection-stochastic/
 │   ├── ml_dataset.csv         178 rows: 11 features + objective value of the 12 policies (ML training/test data)
 │   ├── instance_features.csv  720 rows: the 11 ML features of every instance (Table 3 of the paper)
 │   ├── collection_point_types.csv  type (demand pattern) of each collection point of each instance
-│   └── table5_recomputed.csv  Table 5 recomputed by code/compute_table5.py
+│   └── table5_recomputed.csv  Table 5 (and overall VSS statistics) recomputed from sm_eev_results.csv
 └── code/
-    ├── generate_instances.py  instance generator (reproduces instances/ exactly)
-    ├── main.py, myutils.py    SM / EM / EEV / policy models (gurobipy), research code as used for the paper
-    ├── params.json            run parameters (time limit, model type, ...)
-    ├── Instances_list.xlsx, instances_list_N8_filtered.xlsx   instance lists read by main.py
-    ├── compute_table5.py      recomputes Table 5 and the overall VSS statistics
-    └── aggregate_policy_results.py   aggregation used for Table 6
+    └── generate_instances.py  instance generator (reproduces instances/ exactly)
 ```
 
 ## 2. Instance naming
@@ -70,7 +64,7 @@ Every instance is an Excel workbook with the following sheets.
 |---|---|---|
 | `params` | `param`, `value` | `name`; `n`; `LT` = \|T\| = 3 time slots; `m`; `LS` = \|S\| = 5 scenarios (1 in `_mean` files); `C`; `p` = 10 (unit penalty for uncollected waste); `Tmax`; `Qmax` = 10000 and `M` = 10000 (big constants of the model, see §6); `service_time` = 0; `D` = 20 (baseline demand); `Depot`; `seed` |
 | `nodes` | `i`, `x`, `y`, `service_time` | node 0 is the depot, nodes 1..n the collection points; coordinates in the square [0,10]×[0,10] |
-| `edges` | `i`, `j`, `c`, `t` | **placeholder, not used**: travel costs and times are the Euclidean distances between nodes, computed when the instance is loaded (`D2C = D2T = 1` in `params.json`) |
+| `edges` | `i`, `j`, `c`, `t` | **placeholder, not used**: travel costs and times are the Euclidean distances between nodes, computed when the instance is loaded |
 | `time_windows` | `t`, `e`, `l` | start *e*ₜ and end ℓₜ of each time slot (three equal slots of length Tmax/3) |
 | `demand` | `j`, `d` | initial demand *d*ⱼ, known at the start of the day |
 | `delta` | `j`, `t`, `s`, `delta` | demand increment δʲₜˢ of collection point *j*, appearing at the beginning of slot *t*, in scenario *s* (in `_mean` files: the expected increment, `s = 1`) |
@@ -80,7 +74,7 @@ Every instance is an Excel workbook with the following sheets.
 
 ## 4. Instance generation procedure
 
-`code/generate_instances.py` is the exact procedure used for the paper (extracted from the original notebook). Running
+`code/generate_instances.py` is the exact procedure used for the paper (extracted from the original notebook). It requires Python ≥ 3.9 with `pandas`, `numpy` and `openpyxl`. Running
 
 ```bash
 cd code
@@ -146,7 +140,7 @@ All result workbooks share the same sheets:
 
 **Infeasible instances.** For 123 of the 720 instances Gurobi proves the SM infeasible, so `solved = False`. For 120 of them (all with depot `LowerLeft` and Tmax = 15) the round trip from the depot to the farthest collection point is longer than Tmax. The other 3 are `I3_N6_M3_T15_C{150,200,250}_DepCentral_s1`, where the 6 points cannot be covered by 3 routes within Tmax = 15. For all the remaining 597 instances a feasible solution of both SM and EEV was found within the time limit of 3600 s.
 
-**Recomputing Table 5.** `python code/compute_table5.py` prints Table 5 together with the overall VSS statistics: 597 feasible instances, mean VSS 19.65%; 548 instances solved with a gap ≤ 0.1%, mean VSS 21.33%.
+**Table 5.** `summary/table5_recomputed.csv` contains Table 5 recomputed from `sm_eev_results.csv`. Overall VSS statistics: 597 feasible instances, mean VSS 19.65%; 548 instances solved with a gap ≤ 0.1%, mean VSS 21.33%.
 
 ## 6. Model constants
 
@@ -158,22 +152,7 @@ With the instance data above, the following values are valid for the big constan
 
 The files use M = Qmax = 10⁴. All data are integers (multiples of 0.5 in EM and in the capacity-adjusted policies), so |Q − C|/Qmax ≥ 5·10⁻⁵ whenever Q ≠ C, which is above Gurobi's default integrality tolerance (10⁻⁵).
 
-## 7. Running the optimisation code
-
-Requirements: Python ≥ 3.9, `pandas`, `numpy`, `openpyxl`, `gurobipy` (results were obtained with Gurobi 12, a Windows PC with an Intel Core i7-1260P and 32 GB RAM).
-
-`main.py` is the research code used for the paper. It expects `instances/` and `results/` folders and an instance list in the working directory:
-
-```bash
-cd code
-ln -s ../instances instances && mkdir -p results
-# params.json: "MODEL_TYPE": "STOCHASTIC" -> SM, EM and EEV for every instance listed in Instances_list.xlsx
-#              "MODEL_TYPE": "POLICY"     -> policies P1..P12 for the instances in instances_list_N8_filtered.xlsx
-python main.py                     # all instances of the list
-python main.py I3_N5_M3_T15_C150_DepCentral_s0   # a single instance
-```
-
-## 8. How to cite
+## 7. How to cite
 
 If you use these instances, please cite the paper above (full reference will be added upon publication).
 
